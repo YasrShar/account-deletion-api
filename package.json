@@ -8,10 +8,12 @@
     "build": "echo 'No build step required'",
     "start": "node server.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "google-auth-library": "^9.0.0"
+  },
   "devDependencies": {},
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "keywords": [
     "api",
