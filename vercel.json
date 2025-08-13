@@ -1,7 +1,8 @@
 {
+  "version": 2,
   "functions": {
-    "api/delete-account.js": {
-      "runtime": "@vercel/node@18.x"
+    "api/**/*.js": {
+      "runtime": "@vercel/node@20.x"
     }
   },
   "headers": [
