@@ -3,419 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حذف الحساب - Delete Account</title>
+    <title>حذف الحساب</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             padding: 20px;
         }
-
+        
         .container {
             background: white;
-            padding: 40px;
-            border-radius: 20px;
+            border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
             max-width: 500px;
             width: 100%;
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
-
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #4285f4, #34a853, #fbbc05, #ea4335);
-        }
-
-        .logo {
+        
+        .icon {
             width: 80px;
             height: 80px;
-            margin: 0 auto 30px;
-            background: linear-gradient(45deg, #4285f4, #34a853);
+            background: #ff4757;
             border-radius: 50%;
+            margin: 0 auto 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 40px;
             color: white;
         }
-
+        
         h1 {
-            color: #333;
-            margin-bottom: 10px;
+            color: #2c3e50;
+            margin-bottom: 20px;
             font-size: 28px;
-            font-weight: 300;
         }
-
-        .subtitle {
-            color: #666;
+        
+        .warning-text {
+            color: #e74c3c;
             margin-bottom: 30px;
+            line-height: 1.6;
             font-size: 16px;
-            line-height: 1.5;
         }
-
-        .warning-box {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 30px 0;
-            color: #856404;
-        }
-
-        .warning-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
+        
         .user-info {
             background: #f8f9fa;
-            border-radius: 10px;
             padding: 20px;
-            margin: 20px 0;
-            display: none;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-right: 4px solid #3498db;
         }
-
-        .user-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin: 0 auto 15px;
+        
+        .user-email {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
         }
-
-        .user-name, .user-email {
-            margin: 5px 0;
-            color: #333;
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
         }
-
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        label {
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
         .btn {
             padding: 12px 30px;
             border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             font-size: 16px;
             cursor: pointer;
-            margin: 10px;
             transition: all 0.3s ease;
-            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
         }
-
-        .btn-google {
-            background: #4285f4;
+        
+        .btn-delete {
+            background: #e74c3c;
             color: white;
         }
-
-        .btn-google:hover {
-            background: #3367d6;
+        
+        .btn-delete:hover {
+            background: #c0392b;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.4);
         }
-
-        .btn-danger {
-            background: #dc3545;
+        
+        .btn-delete:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-cancel {
+            background: #95a5a6;
             color: white;
         }
-
-        .btn-danger:hover {
-            background: #c82333;
+        
+        .btn-cancel:hover {
+            background: #7f8c8d;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
         }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-
-        .confirmation-section {
-            display: none;
-            margin-top: 30px;
-        }
-
-        .checkbox-container {
-            margin: 20px 0;
-            text-align: right;
-        }
-
-        .checkbox-container input[type="checkbox"] {
-            margin-left: 10px;
-        }
-
+        
         .loading {
             display: none;
-            margin: 20px 0;
+            margin-top: 20px;
         }
-
+        
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #4285f4;
+            border: 4px solid #f3f3f4;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
             margin: 0 auto;
         }
-
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .success-message, .error-message {
-            display: none;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
+        
+        .login-section {
+            text-align: center;
+            padding: 20px;
         }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        
+        .google-login-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 250px;
+            width: 100%;
         }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
+        
+        .google-login-btn:hover {
+            background: #357ae8;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">🗑️</div>
-        
-        <h1>حذف الحساب</h1>
-        <h2 style="color: #666; font-size: 18px; margin-bottom: 20px;">Delete Account</h2>
-        
-        <p class="subtitle">
-            لحذف حسابك من تطبيقنا، يرجى تسجيل الدخول أولاً باستخدام حساب Google الخاص بك
-            <br>
-            To delete your account from our app, please sign in with your Google account first
-        </p>
-
-        <!-- Sign In Section -->
-        <div id="signInSection">
-            <button class="btn btn-google" onclick="signInWithGoogle()">
-                🔐 تسجيل الدخول بـ Google | Sign in with Google
+        <!-- قسم تسجيل الدخول -->
+        <div id="loginSection" class="login-section">
+            <div class="icon" style="background: #4285f4;">🔑</div>
+            <h1>تسجيل الدخول</h1>
+            <p style="margin-bottom: 20px; color: #666;">
+                يجب تسجيل الدخول بحساب Google أولاً لحذف حسابك
+            </p>
+            <button class="google-login-btn" onclick="signInUser()">
+                <span>G</span>
+                تسجيل الدخول بـ Google
             </button>
         </div>
 
-        <!-- User Info Section -->
-        <div id="userInfo" class="user-info">
-            <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
-            <div id="userName" class="user-name"></div>
-            <div id="userEmail" class="user-email"></div>
-        </div>
-
-        <!-- Warning Box -->
-        <div class="warning-box">
-            <div class="warning-icon">⚠️</div>
-            <strong>تحذير مهم | Important Warning</strong>
-            <p style="margin-top: 10px; line-height: 1.6;">
-                حذف الحساب سيؤدي إلى فقدان جميع البيانات والإعدادات الخاصة بك نهائياً ولا يمكن التراجع عن هذا الإجراء
-                <br><br>
-                Deleting your account will permanently remove all your data and settings. This action cannot be undone.
+        <!-- قسم حذف الحساب -->
+        <div id="deleteSection" style="display: none;">
+            <div class="icon">🗑️</div>
+            <h1>حذف الحساب نهائياً</h1>
+            <p class="warning-text">
+                تحذير: هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بياناتك نهائياً من تطبيقنا.
             </p>
-        </div>
-
-        <!-- Confirmation Section -->
-        <div id="confirmationSection" class="confirmation-section">
-            <div class="checkbox-container">
-                <label>
-                    <input type="checkbox" id="confirmCheckbox">
-                    أؤكد أنني أريد حذف حسابي نهائياً | I confirm that I want to permanently delete my account
-                </label>
+            
+            <div class="user-info" id="userInfo">
+                <div class="user-email" id="userEmail"></div>
+                <div>مُسجل دخول عبر Google</div>
             </div>
             
-            <button class="btn btn-danger" onclick="deleteAccount()" disabled id="deleteBtn">
-                🗑️ حذف الحساب نهائياً | Delete Account Permanently
-            </button>
+            <div class="checkbox-container">
+                <input type="checkbox" id="confirmDelete">
+                <label for="confirmDelete">أفهم أن هذا الإجراء نهائي ولا يمكن التراجع عنه</label>
+            </div>
             
-            <button class="btn btn-secondary" onclick="cancelDeletion()">
-                ❌ إلغاء | Cancel
-            </button>
-        </div>
-
-        <!-- Loading Section -->
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>جاري حذف الحساب... | Deleting account...</p>
-        </div>
-
-        <!-- Messages -->
-        <div id="successMessage" class="success-message">
-            ✅ تم حذف حسابك بنجاح | Your account has been successfully deleted
-        </div>
-        
-        <div id="errorMessage" class="error-message">
-            ❌ حدث خطأ أثناء حذف الحساب | An error occurred while deleting your account
+            <div class="buttons">
+                <button class="btn btn-delete" id="deleteBtn" disabled onclick="deleteAccount()">
+                    حذف الحساب نهائياً
+                </button>
+                <button class="btn btn-cancel" onclick="cancelDeletion()">
+                    إلغاء
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>جاري حذف الحساب...</p>
+            </div>
         </div>
     </div>
 
-    <!-- Google OAuth Script -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/googleapis/1.0.0/gapi.min.js"></script>
-    
+    <!-- Google API Script -->
+    <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // Google OAuth Configuration
-                const GOOGLE_CLIENT_ID = '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com'; // ضع هنا Google Client ID الخاص بك
-        const API_ENDPOINT = 'AIzaSyC_8sF4AmDS2D9gxHix3xcgEXjc317veJo'; // ضع هنا رابط الـ API الخاص بحذف المستخدم
-
+        // ضع هنا Google Client ID الخاص بك
+        const GOOGLE_CLIENT_ID = '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com'; // يجب تغييره
+        
+        let isSignedIn = false;
         let currentUser = null;
-
-        // Initialize Google API
+        
+        // تحميل Google API
         function initGoogleAPI() {
             gapi.load('auth2', function() {
                 gapi.auth2.init({
                     client_id: GOOGLE_CLIENT_ID,
                 }).then(function() {
-                    console.log('Google API initialized');
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    isSignedIn = authInstance.isSignedIn.get();
+                    
+                    if (isSignedIn) {
+                        currentUser = authInstance.currentUser.get();
+                        showDeleteSection();
+                    } else {
+                        showLoginSection();
+                    }
+                }).catch(function(error) {
+                    console.error('خطأ في تحميل Google API:', error);
+                    alert('خطأ في تحميل Google API. تأكد من Client ID.');
                 });
             });
         }
-
-        // Sign in with Google
-        function signInWithGoogle() {
+        
+        // إظهار قسم تسجيل الدخول
+        function showLoginSection() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('deleteSection').style.display = 'none';
+        }
+        
+        // إظهار قسم حذف الحساب
+        function showDeleteSection() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('deleteSection').style.display = 'block';
+            displayUserInfo();
+        }
+        
+        // تسجيل دخول المستخدم
+        function signInUser() {
             const authInstance = gapi.auth2.getAuthInstance();
-            
-            authInstance.signIn({
-                scope: 'profile email'
-            }).then(function(user) {
+            authInstance.signIn().then(function(user) {
                 currentUser = user;
-                displayUserInfo(user);
-                document.getElementById('signInSection').style.display = 'none';
-                document.getElementById('userInfo').style.display = 'block';
-                document.getElementById('confirmationSection').style.display = 'block';
+                showDeleteSection();
             }).catch(function(error) {
-                console.error('Sign-in failed:', error);
-                showError('فشل تسجيل الدخول | Sign-in failed');
+                console.error('خطأ في تسجيل الدخول:', error);
+                alert('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
             });
         }
-
-        // Display user information
-        function displayUserInfo(user) {
-            const profile = user.getBasicProfile();
-            
-            document.getElementById('userAvatar').src = profile.getImageUrl();
-            document.getElementById('userName').textContent = profile.getName();
-            document.getElementById('userEmail').textContent = profile.getEmail();
+        
+        // عرض معلومات المستخدم
+        function displayUserInfo() {
+            if (currentUser) {
+                const profile = currentUser.getBasicProfile();
+                document.getElementById('userEmail').textContent = profile.getEmail();
+            }
         }
-
-        // Enable/disable delete button based on checkbox
-        document.getElementById('confirmCheckbox').addEventListener('change', function() {
-            document.getElementById('deleteBtn').disabled = !this.checked;
+        
+        // التحقق من خانة التأكيد
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmCheckbox = document.getElementById('confirmDelete');
+            if (confirmCheckbox) {
+                confirmCheckbox.addEventListener('change', function() {
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    deleteBtn.disabled = !this.checked;
+                });
+            }
         });
-
-        // Delete account function
+        
+        // حذف الحساب
         async function deleteAccount() {
             if (!currentUser) {
-                showError('يرجى تسجيل الدخول أولاً | Please sign in first');
+                alert('لم يتم العثور على معلومات المستخدم');
                 return;
             }
-
+            
+            // إظهار شاشة التحميل
+            showLoading(true);
+            
+            try {
+                // 1. إلغاء ربط التطبيق من Google
+                await revokeGoogleAccess();
+                
+                // 2. حذف بيانات المستخدم من الخادم الخاص بك
+                await deleteUserDataFromServer();
+                
+                // 3. إظهار رسالة النجح
+                showSuccess();
+                
+            } catch (error) {
+                console.error('خطأ في حذف الحساب:', error);
+                alert('حدث خطأ أثناء حذف الحساب: ' + error.message);
+                showLoading(false);
+            }
+        }
+        
+        // إلغاء ربط التطبيق من Google
+        async function revokeGoogleAccess() {
+            return new Promise((resolve, reject) => {
+                const authInstance = gapi.auth2.getAuthInstance();
+                const user = authInstance.currentUser.get();
+                
+                user.disconnect().then(function() {
+                    console.log('تم إلغاء ربط التطبيق بنجاح');
+                    resolve();
+                }).catch(function(error) {
+                    console.error('خطأ في إلغاء الربط:', error);
+                    reject(error);
+                });
+            });
+        }
+        
+        // حذف بيانات المستخدم من الخادم الخاص بك
+        async function deleteUserDataFromServer() {
             const profile = currentUser.getBasicProfile();
             const userEmail = profile.getEmail();
-            const idToken = currentUser.getAuthResponse().id_token;
-
-            // Show loading
-            document.getElementById('confirmationSection').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-
-            try {
-                // Call your backend API to delete user account
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}`
-                    },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        action: 'delete_account'
-                    })
-                });
-
-                if (response.ok) {
-                    // Revoke Google tokens
-                    const authInstance = gapi.auth2.getAuthInstance();
-                    await authInstance.signOut();
-                    await authInstance.disconnect();
-                    
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
-                    
-                    // Redirect after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'https://www.google.com';
-                    }, 3000);
-                    
-                } else {
-                    throw new Error('Server error');
-                }
-            } catch (error) {
-                console.error('Delete account failed:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('confirmationSection').style.display = 'block';
-                showError('فشل في حذف الحساب، يرجى المحاولة مرة أخرى | Failed to delete account, please try again');
+            const userId = profile.getId();
+            const accessToken = currentUser.getAuthResponse().access_token;
+            
+            // استبدل هذا الرابط برابط Vercel API الخاص بك
+            const response = await fetch('/api/delete-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    email: userEmail,
+                    googleId: userId,
+                    action: 'delete_account'
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'فشل حذف البيانات من الخادم');
             }
+            
+            return response.json();
         }
-
-        // Cancel deletion
+        
+        // إلغاء عملية الحذف
         function cancelDeletion() {
-            document.getElementById('confirmationSection').style.display = 'none';
-            document.getElementById('userInfo').style.display = 'none';
-            document.getElementById('signInSection').style.display = 'block';
-            
-            // Sign out user
-            if (currentUser) {
-                gapi.auth2.getAuthInstance().signOut();
-                currentUser = null;
+            if (confirm('هل أنت متأكد من إلغاء عملية حذف الحساب؟')) {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.close();
+                }
             }
         }
-
-        // Show error message
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            
-            setTimeout(() => {
-                errorElement.style.display = 'none';
-            }, 5000);
+        
+        // إظهار/إخفاء شاشة التحميل
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const buttons = document.querySelector('.buttons');
+            if (loading && buttons) {
+                loading.style.display = show ? 'block' : 'none';
+                buttons.style.display = show ? 'none' : 'flex';
+            }
         }
-
-        // Initialize when page loads
+        
+        // إظهار رسالة النجاح
+        function showSuccess() {
+            document.querySelector('.container').innerHTML = `
+                <div class="icon" style="background: #2ecc71;">✓</div>
+                <h1>تم حذف الحساب بنجاح</h1>
+                <p style="color: #2ecc71; margin: 20px 0; line-height: 1.6;">
+                    تم حذف جميع بياناتك من تطبيقنا بنجاح.<br>
+                    شكراً لاستخدامك خدماتنا.
+                </p>
+                <button class="btn btn-cancel" onclick="window.close()">إغلاق</button>
+            `;
+        }
+        
+        // تحميل Google API عند تحميل الصفحة
         window.onload = function() {
+            if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+                alert('يجب إعداد Google Client ID أولاً!');
+                return;
+            }
             initGoogleAPI();
         };
     </script>
