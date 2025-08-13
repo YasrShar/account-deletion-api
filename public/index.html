@@ -153,87 +153,74 @@
             100% { transform: rotate(360deg); }
         }
         
-        .login-section {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .google-login-btn {
-            background: #4285f4;
+        .success-message {
+            display: none;
+            background: #2ecc71;
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px auto;
-            max-width: 250px;
-            width: 100%;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
         }
         
-        .google-login-btn:hover {
-            background: #357ae8;
+        .error-message {
+            display: none;
+            background: #e74c3c;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- قسم تسجيل الدخول -->
-        <div id="loginSection" class="login-section">
-            <div class="icon" style="background: #4285f4;">🔑</div>
-            <h1>تسجيل الدخول</h1>
-            <p style="margin-bottom: 20px; color: #666;">
-                يجب تسجيل الدخول بحساب Google أولاً لحذف حسابك
-            </p>
-            <button class="google-login-btn" onclick="signInUser()">
-                <span>G</span>
-                تسجيل الدخول بـ Google
+        <div class="icon">🗑️</div>
+        <h1>حذف الحساب نهائياً</h1>
+        <p class="warning-text">
+            تحذير: هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بياناتك نهائياً من تطبيقنا.
+        </p>
+        
+        <div class="user-info" id="userInfo" style="display: none;">
+            <div class="user-email" id="userEmail"></div>
+            <div>مُسجل دخول عبر Google</div>
+        </div>
+        
+        <div class="checkbox-container">
+            <input type="checkbox" id="confirmDelete">
+            <label for="confirmDelete">أفهم أن هذا الإجراء نهائي ولا يمكن التراجع عنه</label>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-delete" id="deleteBtn" disabled onclick="deleteAccount()">
+                حذف الحساب نهائياً
+            </button>
+            <button class="btn btn-cancel" onclick="cancelDeletion()">
+                إلغاء
             </button>
         </div>
-
-        <!-- قسم حذف الحساب -->
-        <div id="deleteSection" style="display: none;">
-            <div class="icon">🗑️</div>
-            <h1>حذف الحساب نهائياً</h1>
-            <p class="warning-text">
-                تحذير: هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بياناتك نهائياً من تطبيقنا.
-            </p>
-            
-            <div class="user-info" id="userInfo">
-                <div class="user-email" id="userEmail"></div>
-                <div>مُسجل دخول عبر Google</div>
-            </div>
-            
-            <div class="checkbox-container">
-                <input type="checkbox" id="confirmDelete">
-                <label for="confirmDelete">أفهم أن هذا الإجراء نهائي ولا يمكن التراجع عنه</label>
-            </div>
-            
-            <div class="buttons">
-                <button class="btn btn-delete" id="deleteBtn" disabled onclick="deleteAccount()">
-                    حذف الحساب نهائياً
-                </button>
-                <button class="btn btn-cancel" onclick="cancelDeletion()">
-                    إلغاء
-                </button>
-            </div>
-            
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>جاري حذف الحساب...</p>
-            </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>جاري حذف الحساب...</p>
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            <h3>تم حذف الحساب بنجاح</h3>
+            <p>شكراً لاستخدامك تطبيقنا</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            <h3>حدث خطأ</h3>
+            <p id="errorText">لم نتمكن من حذف الحساب. يرجى المحاولة مرة أخرى.</p>
         </div>
     </div>
 
     <!-- Google API Script -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // ضع هنا Google Client ID الخاص بك
-        const GOOGLE_CLIENT_ID = '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com'; // يجب تغييره
+        // إعدادات Google API
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // ضع هنا Client ID الخاص بك
+        const API_KEY = 'YOUR_API_KEY'; // ضع هنا API Key الخاص بك
         
         let isSignedIn = false;
         let currentUser = null;
@@ -249,28 +236,13 @@
                     
                     if (isSignedIn) {
                         currentUser = authInstance.currentUser.get();
-                        showDeleteSection();
+                        displayUserInfo();
                     } else {
-                        showLoginSection();
+                        // إذا لم يكن مسجل دخول، قم بتوجيهه لتسجيل الدخول
+                        signInUser();
                     }
-                }).catch(function(error) {
-                    console.error('خطأ في تحميل Google API:', error);
-                    alert('خطأ في تحميل Google API. تأكد من Client ID.');
                 });
             });
-        }
-        
-        // إظهار قسم تسجيل الدخول
-        function showLoginSection() {
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('deleteSection').style.display = 'none';
-        }
-        
-        // إظهار قسم حذف الحساب
-        function showDeleteSection() {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('deleteSection').style.display = 'block';
-            displayUserInfo();
         }
         
         // تسجيل دخول المستخدم
@@ -278,36 +250,30 @@
             const authInstance = gapi.auth2.getAuthInstance();
             authInstance.signIn().then(function(user) {
                 currentUser = user;
-                showDeleteSection();
+                displayUserInfo();
             }).catch(function(error) {
                 console.error('خطأ في تسجيل الدخول:', error);
-                alert('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
+                showError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
             });
         }
         
         // عرض معلومات المستخدم
         function displayUserInfo() {
-            if (currentUser) {
-                const profile = currentUser.getBasicProfile();
-                document.getElementById('userEmail').textContent = profile.getEmail();
-            }
+            const profile = currentUser.getBasicProfile();
+            document.getElementById('userEmail').textContent = profile.getEmail();
+            document.getElementById('userInfo').style.display = 'block';
         }
         
         // التحقق من خانة التأكيد
-        document.addEventListener('DOMContentLoaded', function() {
-            const confirmCheckbox = document.getElementById('confirmDelete');
-            if (confirmCheckbox) {
-                confirmCheckbox.addEventListener('change', function() {
-                    const deleteBtn = document.getElementById('deleteBtn');
-                    deleteBtn.disabled = !this.checked;
-                });
-            }
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            const deleteBtn = document.getElementById('deleteBtn');
+            deleteBtn.disabled = !this.checked;
         });
         
         // حذف الحساب
         async function deleteAccount() {
             if (!currentUser) {
-                alert('لم يتم العثور على معلومات المستخدم');
+                showError('لم يتم العثور على معلومات المستخدم');
                 return;
             }
             
@@ -321,12 +287,13 @@
                 // 2. حذف بيانات المستخدم من الخادم الخاص بك
                 await deleteUserDataFromServer();
                 
-                // 3. إظهار رسالة النجح
+                // 3. إظهار رسالة النجاح
                 showSuccess();
                 
             } catch (error) {
                 console.error('خطأ في حذف الحساب:', error);
-                alert('حدث خطأ أثناء حذف الحساب: ' + error.message);
+                showError('حدث خطأ أثناء حذف الحساب. يرجى المحاولة مرة أخرى.');
+            } finally {
                 showLoading(false);
             }
         }
@@ -352,14 +319,12 @@
             const profile = currentUser.getBasicProfile();
             const userEmail = profile.getEmail();
             const userId = profile.getId();
-            const accessToken = currentUser.getAuthResponse().access_token;
             
-            // استبدل هذا الرابط برابط Vercel API الخاص بك
-            const response = await fetch('/api/delete-account', {
+            // استبدل هذا الرابط برابط API الخاص بك
+            const response = await fetch('/api/delete-user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
                 },
                 body: JSON.stringify({
                     email: userEmail,
@@ -369,8 +334,7 @@
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'فشل حذف البيانات من الخادم');
+                throw new Error('فشل حذف البيانات من الخادم');
             }
             
             return response.json();
@@ -378,23 +342,18 @@
         
         // إلغاء عملية الحذف
         function cancelDeletion() {
-            if (confirm('هل أنت متأكد من إلغاء عملية حذف الحساب؟')) {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.close();
-                }
+            // إعادة توجيه المستخدم إلى صفحة التطبيق أو إغلاق النافذة
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.close();
             }
         }
         
         // إظهار/إخفاء شاشة التحميل
         function showLoading(show) {
-            const loading = document.getElementById('loading');
-            const buttons = document.querySelector('.buttons');
-            if (loading && buttons) {
-                loading.style.display = show ? 'block' : 'none';
-                buttons.style.display = show ? 'none' : 'flex';
-            }
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.querySelector('.buttons').style.display = show ? 'none' : 'flex';
         }
         
         // إظهار رسالة النجاح
@@ -402,20 +361,25 @@
             document.querySelector('.container').innerHTML = `
                 <div class="icon" style="background: #2ecc71;">✓</div>
                 <h1>تم حذف الحساب بنجاح</h1>
-                <p style="color: #2ecc71; margin: 20px 0; line-height: 1.6;">
-                    تم حذف جميع بياناتك من تطبيقنا بنجاح.<br>
-                    شكراً لاستخدامك خدماتنا.
+                <p style="color: #2ecc71; margin: 20px 0;">
+                    تم حذف جميع بياناتك من تطبيقنا بنجاح. شكراً لاستخدامك خدماتنا.
                 </p>
                 <button class="btn btn-cancel" onclick="window.close()">إغلاق</button>
             `;
         }
         
+        // إظهار رسالة الخطأ
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('errorMessage').style.display = 'none';
+            }, 5000);
+        }
+        
         // تحميل Google API عند تحميل الصفحة
         window.onload = function() {
-            if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-                alert('يجب إعداد Google Client ID أولاً!');
-                return;
-            }
             initGoogleAPI();
         };
     </script>
