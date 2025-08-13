@@ -1,32 +1,23 @@
 // api/delete-account.js
-// هذا ملف API Function في Vercel - يعمل مثل endpoint منفصل
+import { OAuth2Client } from 'google-auth-library';
+
+// إعداد Google OAuth Client
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export default async function handler(req, res) {
-  // =============================================
-  // 1. إعداد CORS (Cross-Origin Resource Sharing)
-  // =============================================
-  // يسمح لصفحة HTML في GitHub Pages بالوصول لهذا API
-  
+  // إعداد CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // يقبل طلبات من أي موقع
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-  // =============================================
-  // 2. معالجة طلب OPTIONS (Preflight Request)
-  // =============================================
-  // المتصفح يرسل طلب OPTIONS أولاً للتأكد من السماح بالطلب الحقيقي
-  
+  // معالجة طلب OPTIONS
   if (req.method === 'OPTIONS') {
-    res.status(200).end(); // نرد بـ OK ونغلق الاتصال
+    res.status(200).end();
     return;
   }
 
-  // =============================================
-  // 3. التأكد من نوع الطلب
-  // =============================================
-  // نقبل POST requests فقط لأمان إضافي
-  
+  // قبول POST requests فقط
   if (req.method !== 'POST') {
     return res.status(405).json({ 
       error: 'Method not allowed',
@@ -35,30 +26,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // =============================================
-    // 4. استخراج البيانات من الطلب
-    // =============================================
-    
     console.log('تم استقبال طلب:', req.body);
     
-    const { email, action } = req.body; // استخراج البريد والعمل المطلوب
+    const { email, googleId, action } = req.body;
     
-    // =============================================
-    // 5. التحقق من وجود البيانات المطلوبة
-    // =============================================
-    
-    if (!email || !action) {
+    // التحقق من البيانات المطلوبة
+    if (!email || !action || !googleId) {
       return res.status(400).json({ 
         error: 'بيانات ناقصة',
-        message: 'البريد الإلكتروني والعمل المطلوب مطلوبان' 
+        message: 'البريد الإلكتروني والعمل المطلوب ومعرف Google مطلوبان' 
       });
     }
 
-    // =============================================
-    // 6. التحقق من صحة التوكن
-    // =============================================
-    
-    const authHeader = req.headers.authorization; // استخراج رأس التخويل
+    // التحقق من التوكن
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ 
         error: 'غير مخول',
@@ -66,38 +47,47 @@ export default async function handler(req, res) {
       });
     }
 
-    const idToken = authHeader.split(' ')[1]; // استخراج التوكن من النص
+    const idToken = authHeader.split(' ')[1];
     
-    // =============================================
-    // 7. وضع التطوير (لتسهيل الاختبار)
-    // =============================================
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('وضع التطوير: تجاهل التحقق من التوكن');
+    // التحقق من صحة التوكن مع Google
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+      
+      // التأكد أن التوكن يخص نفس المستخدم
+      if (payload.email !== email || payload.sub !== googleId) {
+        return res.status(403).json({
+          error: 'التوكن لا يطابق بيانات المستخدم',
+          message: 'التوكن المُرسل لا يخص هذا المستخدم'
+        });
+      }
+    } catch (error) {
+      console.error('خطأ في التحقق من التوكن:', error);
+      return res.status(401).json({
+        error: 'توكن غير صحيح',
+        message: 'فشل التحقق من التوكن'
+      });
     }
 
-    // =============================================
-    // 8. معالجة طلب حذف الحساب
-    // =============================================
-    
+    // معالجة طلب حذف الحساب
     if (action === 'delete_account') {
       console.log(`معالجة حذف الحساب لـ: ${email}`);
       
-      // استدعاء دالة حذف الحساب
-      await simulateAccountDeletion(email);
+      // حذف الحساب من قاعدة البيانات
+      await deleteAccountFromDatabase(email, googleId);
       
-      // إرسال رد نجح العملية
+      // إرسال رد بنجح العملية
       return res.status(200).json({ 
         success: true, 
         message: 'تم حذف الحساب بنجاح',
         email: email,
-        timestamp: new Date().toISOString() // وقت العملية
+        timestamp: new Date().toISOString()
       });
     }
-    
-    // =============================================
-    // 9. عمل غير مدعوم
-    // =============================================
     
     return res.status(400).json({ 
       error: 'عمل غير صحيح',
@@ -105,10 +95,6 @@ export default async function handler(req, res) {
     });
     
   } catch (error) {
-    // =============================================
-    // 10. معالجة الأخطاء
-    // =============================================
-    
     console.error('خطأ في API:', error);
     return res.status(500).json({ 
       error: 'خطأ داخلي في الخادم',
@@ -118,28 +104,18 @@ export default async function handler(req, res) {
   }
 }
 
-// =============================================
-// دالة محاكاة حذف الحساب
-// =============================================
-// في التطبيق الحقيقي، ستقوم هذه الدالة بـ:
-
-async function simulateAccountDeletion(email) {
-  // 1. حذف المستخدم من قاعدة البيانات
-  // await database.users.delete({ email: email });
+// دالة حذف الحساب من قاعدة البيانات
+async function deleteAccountFromDatabase(email, googleId) {
+  // هنا يجب أن تضع كود حذف البيانات من قاعدة البيانات الخاصة بك
+  // مثال:
+  // await db.users.deleteOne({ email: email, googleId: googleId });
+  // await db.user_data.deleteMany({ userId: googleId });
   
-  // 2. حذف ملفات المستخدم من التخزين
-  // await storage.deleteUserFiles(email);
+  console.log(`تم حذف الحساب: ${email} (${googleId})`);
   
-  // 3. إرسال إيميل تأكيد الحذف
-  // await sendEmail(email, 'تم حذف حسابك بنجاح');
-  
-  // 4. تسجيل العملية في السجلات
-  // await logs.record('account_deleted', { email, timestamp: new Date() });
-  
-  // الآن: فقط محاكاة بانتظار ثانية واحدة
+  // محاكاة عملية حذف قاعدة البيانات
   return new Promise((resolve) => {
     setTimeout(() => {
-      console.log(`تم تعليم الحساب ${email} للحذف`);
       resolve();
     }, 1000);
   });
