@@ -1,0 +1,24 @@
+{
+  "name": "account-deletion-api",
+  "version": "1.0.0",
+  "description": "API for account deletion functionality",
+  "main": "api/delete-account.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": [
+    "api",
+    "vercel",
+    "account-deletion",
+    "oauth"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
