@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حذف الحساب</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .icon {
+            width: 80px;
+            height: 80px;
+            background: #ff4757;
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .warning-text {
+            color: #e74c3c;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-right: 4px solid #3498db;
+        }
+        
+        .user-email {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        label {
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-delete:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f4;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .login-section {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .google-login-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 250px;
+            width: 100%;
+        }
+        
+        .google-login-btn:hover {
+            background: #357ae8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- قسم تسجيل الدخول -->
+        <div id="loginSection" class="login-section">
+            <div class="icon" style="background: #4285f4;">🔑</div>
+            <h1>تسجيل الدخول</h1>
+            <p style="margin-bottom: 20px; color: #666;">
+                يجب تسجيل الدخول بحساب Google أولاً لحذف حسابك
+            </p>
+            <button class="google-login-btn" onclick="signInUser()">
+                <span>G</span>
+                تسجيل الدخول بـ Google
+            </button>
+        </div>
+
+        <!-- قسم حذف الحساب -->
+        <div id="deleteSection" style="display: none;">
+            <div class="icon">🗑️</div>
+            <h1>حذف الحساب نهائياً</h1>
+            <p class="warning-text">
+                تحذير: هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بياناتك نهائياً من تطبيقنا.
+            </p>
+            
+            <div class="user-info" id="userInfo">
+                <div class="user-email" id="userEmail"></div>
+                <div>مُسجل دخول عبر Google</div>
+            </div>
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="confirmDelete">
+                <label for="confirmDelete">أفهم أن هذا الإجراء نهائي ولا يمكن التراجع عنه</label>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn btn-delete" id="deleteBtn" disabled onclick="deleteAccount()">
+                    حذف الحساب نهائياً
+                </button>
+                <button class="btn btn-cancel" onclick="cancelDeletion()">
+                    إلغاء
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>جاري حذف الحساب...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google API Script -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        // ضع هنا Google Client ID الخاص بك
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // يجب تغييره
+        
+        let isSignedIn = false;
+        let currentUser = null;
+        
+        // تحميل Google API
+        function initGoogleAPI() {
+            gapi.load('auth2', function() {
+                gapi.auth2.init({
+                    client_id: GOOGLE_CLIENT_ID,
+                }).then(function() {
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    isSignedIn = authInstance.isSignedIn.get();
+                    
+                    if (isSignedIn) {
+                        currentUser = authInstance.currentUser.get();
+                        showDeleteSection();
+                    } else {
+                        showLoginSection();
+                    }
+                }).catch(function(error) {
+                    console.error('خطأ في تحميل Google API:', error);
+                    alert('خطأ في تحميل Google API. تأكد من Client ID.');
+                });
+            });
+        }
+        
+        // إظهار قسم تسجيل الدخول
+        function showLoginSection() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('deleteSection').style.display = 'none';
+        }
+        
+        // إظهار قسم حذف الحساب
+        function showDeleteSection() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('deleteSection').style.display = 'block';
+            displayUserInfo();
+        }
+        
+        // تسجيل دخول المستخدم
+        function signInUser() {
+            const authInstance = gapi.auth2.getAuthInstance();
+            authInstance.signIn().then(function(user) {
+                currentUser = user;
+                showDeleteSection();
+            }).catch(function(error) {
+                console.error('خطأ في تسجيل الدخول:', error);
+                alert('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
+            });
+        }
+        
+        // عرض معلومات المستخدم
+        function displayUserInfo() {
+            if (currentUser) {
+                const profile = currentUser.getBasicProfile();
+                document.getElementById('userEmail').textContent = profile.getEmail();
+            }
+        }
+        
+        // التحقق من خانة التأكيد
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmCheckbox = document.getElementById('confirmDelete');
+            if (confirmCheckbox) {
+                confirmCheckbox.addEventListener('change', function() {
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    deleteBtn.disabled = !this.checked;
+                });
+            }
+        });
+        
+        // حذف الحساب
+        async function deleteAccount() {
+            if (!currentUser) {
+                alert('لم يتم العثور على معلومات المستخدم');
+                return;
+            }
+            
+            // إظهار شاشة التحميل
+            showLoading(true);
+            
+            try {
+                // 1. إلغاء ربط التطبيق من Google
+                await revokeGoogleAccess();
+                
+                // 2. حذف بيانات المستخدم من الخادم الخاص بك
+                await deleteUserDataFromServer();
+                
+                // 3. إظهار رسالة النجح
+                showSuccess();
+                
+            } catch (error) {
+                console.error('خطأ في حذف الحساب:', error);
+                alert('حدث خطأ أثناء حذف الحساب: ' + error.message);
+                showLoading(false);
+            }
+        }
+        
+        // إلغاء ربط التطبيق من Google
+        async function revokeGoogleAccess() {
+            return new Promise((resolve, reject) => {
+                const authInstance = gapi.auth2.getAuthInstance();
+                const user = authInstance.currentUser.get();
+                
+                user.disconnect().then(function() {
+                    console.log('تم إلغاء ربط التطبيق بنجاح');
+                    resolve();
+                }).catch(function(error) {
+                    console.error('خطأ في إلغاء الربط:', error);
+                    reject(error);
+                });
+            });
+        }
+        
+        // حذف بيانات المستخدم من الخادم الخاص بك
+        async function deleteUserDataFromServer() {
+            const profile = currentUser.getBasicProfile();
+            const userEmail = profile.getEmail();
+            const userId = profile.getId();
+            const accessToken = currentUser.getAuthResponse().access_token;
+            
+            // استبدل هذا الرابط برابط Vercel API الخاص بك
+            const response = await fetch('/api/delete-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    email: userEmail,
+                    googleId: userId,
+                    action: 'delete_account'
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'فشل حذف البيانات من الخادم');
+            }
+            
+            return response.json();
+        }
+        
+        // إلغاء عملية الحذف
+        function cancelDeletion() {
+            if (confirm('هل أنت متأكد من إلغاء عملية حذف الحساب؟')) {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.close();
+                }
+            }
+        }
+        
+        // إظهار/إخفاء شاشة التحميل
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const buttons = document.querySelector('.buttons');
+            if (loading && buttons) {
+                loading.style.display = show ? 'block' : 'none';
+                buttons.style.display = show ? 'none' : 'flex';
+            }
+        }
+        
+        // إظهار رسالة النجاح
+        function showSuccess() {
+            document.querySelector('.container').innerHTML = `
+                <div class="icon" style="background: #2ecc71;">✓</div>
+                <h1>تم حذف الحساب بنجاح</h1>
+                <p style="color: #2ecc71; margin: 20px 0; line-height: 1.6;">
+                    تم حذف جميع بياناتك من تطبيقنا بنجاح.<br>
+                    شكراً لاستخدامك خدماتنا.
+                </p>
+                <button class="btn btn-cancel" onclick="window.close()">إغلاق</button>
+            `;
+        }
+        
+        // تحميل Google API عند تحميل الصفحة
+        window.onload = function() {
+            if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+                alert('يجب إعداد Google Client ID أولاً!');
+                return;
+            }
+            initGoogleAPI();
+        };
+    </script>
+</body>
+</html>
