@@ -416,17 +416,26 @@
                 return;
             }
             
+            console.log('بدء عملية حذف الحساب...');
+            console.log('بيانات المستخدم:', {
+                email: currentUser.email,
+                id: currentUser.id
+            });
+            
             // إظهار شاشة التحميل
             showLoading(true);
             
             try {
-                // 1. إلغاء ربط التطبيق من Google
+                // 1. إلغاء ربط التطبيق من Google (اختياري)
+                console.log('الخطوة 1: إلغاء ربط Google...');
                 await revokeGoogleAccess();
                 
                 // 2. حذف بيانات المستخدم من الخادم الخاص بك
+                console.log('الخطوة 2: حذف البيانات من الخادم...');
                 await deleteUserDataFromServer();
                 
                 // 3. إظهار رسالة النجح
+                console.log('الخطوة 3: تم الحذف بنجاح');
                 showSuccess();
                 
             } catch (error) {
