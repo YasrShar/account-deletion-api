@@ -229,35 +229,96 @@
         </div>
     </div>
 
-    <!-- Google API Script -->
-    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         // ضع هنا Google Client ID الخاص بك
-        const GOOGLE_CLIENT_ID = '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com'; // يجب تغييره
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // يجب تغييره
         
         let isSignedIn = false;
         let currentUser = null;
+        let googleUser = null;
         
-        // تحميل Google API
+        // تحميل Google Identity Services
         function initGoogleAPI() {
-            gapi.load('auth2', function() {
-                gapi.auth2.init({
+            // التحقق من وجود Client ID
+            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+                console.error('Google Client ID غير محدد!');
+                alert('خطأ: يجب إعداد Google Client ID في الكود أولاً');
+                return;
+            }
+            
+            console.log('جاري تحميل Google Identity Services...');
+            console.log('Client ID:', GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+            
+            // انتظار تحميل Google API
+            if (typeof google !== 'undefined' && google.accounts) {
+                setupGoogleAuth();
+            } else {
+                console.log('في انتظار تحميل Google API...');
+                setTimeout(initGoogleAPI, 1000);
+            }
+        }
+        
+        // إعداد Google Authentication
+        function setupGoogleAuth() {
+            try {
+                // تهيئة Google Identity Services
+                google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
-                }).then(function() {
-                    const authInstance = gapi.auth2.getAuthInstance();
-                    isSignedIn = authInstance.isSignedIn.get();
-                    
-                    if (isSignedIn) {
-                        currentUser = authInstance.currentUser.get();
-                        showDeleteSection();
-                    } else {
-                        showLoginSection();
-                    }
-                }).catch(function(error) {
-                    console.error('خطأ في تحميل Google API:', error);
-                    alert('خطأ في تحميل Google API. تأكد من Client ID.');
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: false
                 });
+                
+                console.log('تم تحميل Google API بنجاح');
+                showLoginSection();
+                
+            } catch (error) {
+                console.error('خطأ في إعداد Google API:', error);
+                alert('خطأ في إعداد Google API: ' + error.message);
+            }
+        }
+        
+        // معالجة استجابة تسجيل الدخول
+        function handleCredentialResponse(response) {
+            console.log('تم تسجيل الدخول بنجاح');
+            
+            // فك تشفير JWT token
+            const payload = parseJwt(response.credential);
+            
+            googleUser = {
+                id: payload.sub,
+                email: payload.email,
+                name: payload.name,
+                picture: payload.picture,
+                credential: response.credential
+            };
+            
+            currentUser = googleUser;
+            isSignedIn = true;
+            
+            console.log('بيانات المستخدم:', {
+                email: googleUser.email,
+                name: googleUser.name
             });
+            
+            showDeleteSection();
+        }
+        
+        // فك تشفير JWT Token
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('خطأ في فك تشفير Token:', error);
+                return null;
+            }
         }
         
         // إظهار قسم تسجيل الدخول
@@ -275,21 +336,65 @@
         
         // تسجيل دخول المستخدم
         function signInUser() {
-            const authInstance = gapi.auth2.getAuthInstance();
-            authInstance.signIn().then(function(user) {
-                currentUser = user;
-                showDeleteSection();
-            }).catch(function(error) {
+            try {
+                console.log('محاولة تسجيل الدخول...');
+                
+                // عرض نافذة تسجيل الدخول من Google
+                google.accounts.id.prompt((notification) => {
+                    console.log('إشعار:', notification);
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                        console.log('لم يتم عرض نافذة تسجيل الدخول، جاري المحاولة بطريقة أخرى...');
+                        
+                        // طريقة بديلة: استخدام OAuth popup
+                        const client = google.accounts.oauth2.initTokenClient({
+                            client_id: GOOGLE_CLIENT_ID,
+                            scope: 'openid email profile',
+                            callback: (tokenResponse) => {
+                                console.log('تم الحصول على Token:', tokenResponse);
+                                // الحصول على معلومات المستخدم
+                                getUserInfo(tokenResponse.access_token);
+                            }
+                        });
+                        client.requestAccessToken();
+                    }
+                });
+                
+            } catch (error) {
                 console.error('خطأ في تسجيل الدخول:', error);
-                alert('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
-            });
+                alert('فشل تسجيل الدخول: ' + error.message);
+            }
+        }
+        
+        // الحصول على معلومات المستخدم من Google API
+        async function getUserInfo(accessToken) {
+            try {
+                const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
+                const userInfo = await response.json();
+                
+                googleUser = {
+                    id: userInfo.id,
+                    email: userInfo.email,
+                    name: userInfo.name,
+                    picture: userInfo.picture,
+                    accessToken: accessToken
+                };
+                
+                currentUser = googleUser;
+                isSignedIn = true;
+                
+                console.log('تم تسجيل الدخول:', userInfo.email);
+                showDeleteSection();
+                
+            } catch (error) {
+                console.error('خطأ في الحصول على معلومات المستخدم:', error);
+                alert('خطأ في الحصول على معلومات المستخدم');
+            }
         }
         
         // عرض معلومات المستخدم
         function displayUserInfo() {
-            if (currentUser) {
-                const profile = currentUser.getBasicProfile();
-                document.getElementById('userEmail').textContent = profile.getEmail();
+            if (currentUser && currentUser.email) {
+                document.getElementById('userEmail').textContent = currentUser.email;
             }
         }
         
@@ -412,10 +517,23 @@
         
         // تحميل Google API عند تحميل الصفحة
         window.onload = function() {
-            if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-                alert('يجب إعداد Google Client ID أولاً!');
+            console.log('تحميل الصفحة...');
+            
+            // التحقق من Client ID
+            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+                console.error('Google Client ID غير محدد!');
+                document.querySelector('.container').innerHTML = `
+                    <div class="icon" style="background: #e74c3c;">⚠️</div>
+                    <h1>خطأ في الإعداد</h1>
+                    <p style="color: #e74c3c; margin: 20px 0; line-height: 1.6;">
+                        يجب إعداد Google Client ID في الكود أولاً!<br>
+                        يرجى مراجعة المطور لإصلاح هذه المشكلة.
+                    </p>
+                `;
                 return;
             }
+            
+            // تحميل Google Identity Services
             initGoogleAPI();
         };
     </script>
