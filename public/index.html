@@ -178,6 +178,15 @@
         .google-login-btn:hover {
             background: #357ae8;
         }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #ffcdd2;
+        }
     </style>
 </head>
 <body>
@@ -193,6 +202,7 @@
                 <span>G</span>
                 تسجيل الدخول بـ Google
             </button>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
         </div>
 
         <!-- قسم حذف الحساب -->
@@ -233,23 +243,21 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         // ضع هنا Google Client ID الخاص بك
-        const GOOGLE_CLIENT_ID = '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com'; // يجب تغييره
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // يجب تغييره
         
         let isSignedIn = false;
         let currentUser = null;
-        let googleUser = null;
+        let accessToken = null;
         
         // تحميل Google Identity Services
         function initGoogleAPI() {
             // التحقق من وجود Client ID
-            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-                console.error('Google Client ID غير محدد!');
-                alert('خطأ: يجب إعداد Google Client ID في الكود أولاً');
+            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com') {
+                showError('يجب إعداد Google Client ID في الكود أولاً');
                 return;
             }
             
             console.log('جاري تحميل Google Identity Services...');
-            console.log('Client ID:', GOOGLE_CLIENT_ID.substring(0, 20) + '...');
             
             // انتظار تحميل Google API
             if (typeof google !== 'undefined' && google.accounts) {
@@ -263,7 +271,7 @@
         // إعداد Google Authentication
         function setupGoogleAuth() {
             try {
-                // تهيئة Google Identity Services
+                // تهيئة Google Identity Services للتوكن
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
                     callback: handleCredentialResponse,
@@ -276,34 +284,37 @@
                 
             } catch (error) {
                 console.error('خطأ في إعداد Google API:', error);
-                alert('خطأ في إعداد Google API: ' + error.message);
+                showError('خطأ في إعداد Google API: ' + error.message);
             }
         }
         
-        // معالجة استجابة تسجيل الدخول
+        // معالجة استجابة تسجيل الدخول بـ JWT
         function handleCredentialResponse(response) {
             console.log('تم تسجيل الدخول بنجاح');
             
             // فك تشفير JWT token
             const payload = parseJwt(response.credential);
             
-            googleUser = {
-                id: payload.sub,
-                email: payload.email,
-                name: payload.name,
-                picture: payload.picture,
-                credential: response.credential
-            };
-            
-            currentUser = googleUser;
-            isSignedIn = true;
-            
-            console.log('بيانات المستخدم:', {
-                email: googleUser.email,
-                name: googleUser.name
-            });
-            
-            showDeleteSection();
+            if (payload) {
+                currentUser = {
+                    id: payload.sub,
+                    email: payload.email,
+                    name: payload.name,
+                    picture: payload.picture,
+                    credential: response.credential
+                };
+                
+                isSignedIn = true;
+                
+                console.log('بيانات المستخدم:', {
+                    email: currentUser.email,
+                    name: currentUser.name
+                });
+                
+                showDeleteSection();
+            } else {
+                showError('فشل في فك تشفير بيانات المستخدم');
+            }
         }
         
         // فك تشفير JWT Token
@@ -318,6 +329,24 @@
             } catch (error) {
                 console.error('خطأ في فك تشفير Token:', error);
                 return null;
+            }
+        }
+        
+        // إظهار رسالة خطأ
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+            console.error(message);
+        }
+        
+        // إخفاء رسالة الخطأ
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
             }
         }
         
@@ -337,49 +366,59 @@
         // تسجيل دخول المستخدم
         function signInUser() {
             try {
+                hideError();
                 console.log('محاولة تسجيل الدخول...');
                 
-                // عرض نافذة تسجيل الدخول من Google
+                // محاولة عرض نافذة تسجيل الدخول
                 google.accounts.id.prompt((notification) => {
-                    console.log('إشعار:', notification);
+                    console.log('إشعار Google:', notification);
+                    
                     if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        console.log('لم يتم عرض نافذة تسجيل الدخول، جاري المحاولة بطريقة أخرى...');
+                        console.log('لم يتم عرض نافذة تسجيل الدخول، جاري المحاولة بـ OAuth...');
                         
-                        // طريقة بديلة: استخدام OAuth popup
-                        const client = google.accounts.oauth2.initTokenClient({
-                            client_id: GOOGLE_CLIENT_ID,
-                            scope: 'openid email profile',
-                            callback: (tokenResponse) => {
-                                console.log('تم الحصول على Token:', tokenResponse);
-                                // الحصول على معلومات المستخدم
-                                getUserInfo(tokenResponse.access_token);
-                            }
-                        });
-                        client.requestAccessToken();
+                        // طريقة بديلة: استخدام OAuth 2.0
+                        if (google.accounts.oauth2) {
+                            const client = google.accounts.oauth2.initTokenClient({
+                                client_id: GOOGLE_CLIENT_ID,
+                                scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+                                callback: (tokenResponse) => {
+                                    console.log('تم الحصول على Access Token');
+                                    accessToken = tokenResponse.access_token;
+                                    getUserInfo(tokenResponse.access_token);
+                                }
+                            });
+                            client.requestAccessToken();
+                        } else {
+                            showError('Google OAuth غير متاح');
+                        }
                     }
                 });
                 
             } catch (error) {
                 console.error('خطأ في تسجيل الدخول:', error);
-                alert('فشل تسجيل الدخول: ' + error.message);
+                showError('فشل تسجيل الدخول: ' + error.message);
             }
         }
         
         // الحصول على معلومات المستخدم من Google API
-        async function getUserInfo(accessToken) {
+        async function getUserInfo(token) {
             try {
-                const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
+                const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${token}`);
+                
+                if (!response.ok) {
+                    throw new Error('فشل في الحصول على معلومات المستخدم');
+                }
+                
                 const userInfo = await response.json();
                 
-                googleUser = {
+                currentUser = {
                     id: userInfo.id,
                     email: userInfo.email,
                     name: userInfo.name,
-                    picture: userInfo.picture,
-                    accessToken: accessToken
+                    picture: userInfo.picture
                 };
                 
-                currentUser = googleUser;
+                accessToken = token;
                 isSignedIn = true;
                 
                 console.log('تم تسجيل الدخول:', userInfo.email);
@@ -387,7 +426,7 @@
                 
             } catch (error) {
                 console.error('خطأ في الحصول على معلومات المستخدم:', error);
-                alert('خطأ في الحصول على معلومات المستخدم');
+                showError('خطأ في الحصول على معلومات المستخدم: ' + error.message);
             }
         }
         
@@ -404,7 +443,9 @@
             if (confirmCheckbox) {
                 confirmCheckbox.addEventListener('change', function() {
                     const deleteBtn = document.getElementById('deleteBtn');
-                    deleteBtn.disabled = !this.checked;
+                    if (deleteBtn) {
+                        deleteBtn.disabled = !this.checked;
+                    }
                 });
             }
         });
@@ -412,7 +453,7 @@
         // حذف الحساب
         async function deleteAccount() {
             if (!currentUser) {
-                alert('لم يتم العثور على معلومات المستخدم');
+                showError('لم يتم العثور على معلومات المستخدم');
                 return;
             }
             
@@ -426,65 +467,47 @@
             showLoading(true);
             
             try {
-                // 1. إلغاء ربط التطبيق من Google (اختياري)
-                console.log('الخطوة 1: إلغاء ربط Google...');
-                await revokeGoogleAccess();
-                
-                // 2. حذف بيانات المستخدم من الخادم الخاص بك
-                console.log('الخطوة 2: حذف البيانات من الخادم...');
+                // حذف بيانات المستخدم من الخادم الخاص بك
+                console.log('حذف البيانات من الخادم...');
                 await deleteUserDataFromServer();
                 
-                // 3. إظهار رسالة النجح
-                console.log('الخطوة 3: تم الحذف بنجاح');
+                // إظهار رسالة النجح
+                console.log('تم الحذف بنجاح');
                 showSuccess();
                 
             } catch (error) {
                 console.error('خطأ في حذف الحساب:', error);
-                alert('حدث خطأ أثناء حذف الحساب: ' + error.message);
+                showError('حدث خطأ أثناء حذف الحساب: ' + error.message);
                 showLoading(false);
             }
         }
         
-        // إلغاء ربط التطبيق من Google
-        async function revokeGoogleAccess() {
-            return new Promise((resolve, reject) => {
-                const authInstance = gapi.auth2.getAuthInstance();
-                const user = authInstance.currentUser.get();
-                
-                user.disconnect().then(function() {
-                    console.log('تم إلغاء ربط التطبيق بنجاح');
-                    resolve();
-                }).catch(function(error) {
-                    console.error('خطأ في إلغاء الربط:', error);
-                    reject(error);
-                });
-            });
-        }
-        
         // حذف بيانات المستخدم من الخادم الخاص بك
         async function deleteUserDataFromServer() {
-            const profile = currentUser.getBasicProfile();
-            const userEmail = profile.getEmail();
-            const userId = profile.getId();
-            const accessToken = currentUser.getAuthResponse().access_token;
-            
             // استبدل هذا الرابط برابط Vercel API الخاص بك
             const response = await fetch('/api/delete-account', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': `Bearer ${accessToken || 'no-token'}`
                 },
                 body: JSON.stringify({
-                    email: userEmail,
-                    googleId: userId,
+                    email: currentUser.email,
+                    googleId: currentUser.id,
+                    name: currentUser.name,
                     action: 'delete_account'
                 })
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'فشل حذف البيانات من الخادم');
+                let errorMessage = 'فشل حذف البيانات من الخادم';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    errorMessage = `HTTP Error: ${response.status}`;
+                }
+                throw new Error(errorMessage);
             }
             
             return response.json();
@@ -493,10 +516,12 @@
         // إلغاء عملية الحذف
         function cancelDeletion() {
             if (confirm('هل أنت متأكد من إلغاء عملية حذف الحساب؟')) {
+                // العودة إلى الصفحة السابقة أو إغلاق النافذة
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    window.close();
+                    // أو إعادة التوجيه إلى صفحة رئيسية
+                    window.location.href = 'https://your-app-url.com';
                 }
             }
         }
@@ -520,7 +545,9 @@
                     تم حذف جميع بياناتك من تطبيقنا بنجاح.<br>
                     شكراً لاستخدامك خدماتنا.
                 </p>
-                <button class="btn btn-cancel" onclick="window.close()">إغلاق</button>
+                <button class="btn btn-cancel" onclick="window.location.href='https://your-app-url.com'">
+                    العودة للموقع
+                </button>
             `;
         }
         
@@ -544,6 +571,12 @@
             
             // تحميل Google Identity Services
             initGoogleAPI();
+        };
+        
+        // معالجة الأخطاء العامة
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('خطأ JavaScript:', msg, 'في الملف:', url, 'السطر:', line);
+            return false;
         };
     </script>
 </body>
