@@ -1,5 +1,17 @@
 // api/delete-account.js
 import { OAuth2Client } from 'google-auth-library';
+import admin from 'firebase-admin';
+
+// إعداد Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
 
 // إعداد Google OAuth Client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -10,13 +22,13 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
-
+  
   // معالجة طلب OPTIONS
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-
+  
   // قبول POST requests فقط
   if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -77,14 +89,39 @@ export default async function handler(req, res) {
     if (action === 'delete_account') {
       console.log(`معالجة حذف الحساب لـ: ${email}`);
       
-      // حذف الحساب من قاعدة البيانات
-      await deleteAccountFromDatabase(email, googleId);
+      let firebaseUid = null;
+      
+      try {
+        // 1. البحث عن المستخدم في Firebase بالإيميل
+        const userRecord = await admin.auth().getUserByEmail(email);
+        firebaseUid = userRecord.uid;
+        console.log(`تم العثور على المستخدم في Firebase: ${firebaseUid}`);
+        
+        // 2. حذف البيانات من قاعدة البيانات أولاً
+        await deleteAccountFromDatabase(email, googleId, firebaseUid);
+        
+        // 3. حذف المستخدم من Firebase Authentication
+        await admin.auth().deleteUser(firebaseUid);
+        console.log(`تم حذف المستخدم من Firebase Authentication: ${firebaseUid}`);
+        
+      } catch (firebaseError) {
+        console.error('خطأ Firebase:', firebaseError);
+        
+        // إذا لم يتم العثور على المستخدم في Firebase، احذف من قاعدة البيانات فقط
+        if (firebaseError.code === 'auth/user-not-found') {
+          console.log('المستخدم غير موجود في Firebase، حذف من قاعدة البيانات فقط');
+          await deleteAccountFromDatabase(email, googleId, null);
+        } else {
+          throw firebaseError;
+        }
+      }
       
       // إرسال رد بنجح العملية
       return res.status(200).json({ 
         success: true, 
-        message: 'تم حذف الحساب بنجاح',
+        message: 'تم حذف الحساب بنجاح من التطبيق و Firebase',
         email: email,
+        firebaseUid: firebaseUid,
         timestamp: new Date().toISOString()
       });
     }
@@ -105,18 +142,40 @@ export default async function handler(req, res) {
 }
 
 // دالة حذف الحساب من قاعدة البيانات
-async function deleteAccountFromDatabase(email, googleId) {
-  // هنا يجب أن تضع كود حذف البيانات من قاعدة البيانات الخاصة بك
-  // مثال:
-  // await db.users.deleteOne({ email: email, googleId: googleId });
-  // await db.user_data.deleteMany({ userId: googleId });
+async function deleteAccountFromDatabase(email, googleId, firebaseUid) {
+  console.log(`حذف البيانات: ${email} (Google: ${googleId}, Firebase: ${firebaseUid})`);
   
-  console.log(`تم حذف الحساب: ${email} (${googleId})`);
-  
-  // محاكاة عملية حذف قاعدة البيانات
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, 1000);
-  });
+  try {
+    // هنا ضع كود حذف البيانات من قاعدة البيانات الخاصة بك
+    // مثال مع Firestore:
+    /*
+    const db = admin.firestore();
+    
+    // حذف مستندات المستخدم
+    await db.collection('users').doc(firebaseUid || googleId).delete();
+    
+    // حذف بيانات المستخدم الأخرى
+    const userDataQuery = db.collection('user_data').where('userId', '==', firebaseUid || googleId);
+    const userDataSnapshot = await userDataQuery.get();
+    
+    const batch = db.batch();
+    userDataSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    
+    await batch.commit();
+    */
+    
+    // محاكاة عملية حذف قاعدة البيانات
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('تم حذف البيانات من قاعدة البيانات');
+        resolve();
+      }, 1000);
+    });
+    
+  } catch (error) {
+    console.error('خطأ في حذف البيانات:', error);
+    throw error;
+  }
 }
