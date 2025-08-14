@@ -1,23 +1,25 @@
 {
-  "name": "account-deletion-api",
+  "name": "delete-account-vercel-app",
   "version": "1.0.0",
-  "description": "API for account deletion functionality",
-  "main": "api/delete-account.js",
+  "description": "تطبيق حذف الحسابات المرتبطة بـ Google",
+  "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step required'"
+    "build": "echo 'Build complete'",
+    "start": "echo 'Ready'"
   },
   "dependencies": {
-    "google-auth-library": "^9.0.0"
+    "firebase-admin": "^12.0.0",
+    "google-auth-library": "^9.4.1"
   },
   "engines": {
-   "node": "22.x"
+    "node": ">=18.0.0"
   },
   "keywords": [
-    "api",
-    "vercel",
-    "account-deletion",
-    "oauth"
+    "firebase",
+    "google-auth",
+    "delete-account",
+    "vercel"
   ],
   "author": "Your Name",
   "license": "MIT"
