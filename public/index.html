@@ -252,7 +252,7 @@
         // تحميل Google Identity Services
         function initGoogleAPI() {
             // التحقق من وجود Client ID
-            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com') {
                 showError('يجب إعداد Google Client ID في الكود أولاً');
                 return;
             }
@@ -337,10 +337,16 @@
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             if (errorDiv) {
-                errorDiv.textContent = message;
+                errorDiv.innerHTML = `
+                    <strong>خطأ:</strong> ${message}
+                    <br><small>تحقق من Console للمزيد من التفاصيل</small>
+                `;
                 errorDiv.style.display = 'block';
             }
-            console.error(message);
+            
+            // إظهار alert أيضاً للتأكد
+            alert('خطأ: ' + message);
+            console.error('🚨 خطأ للمستخدم:', message);
         }
         
         // إخفاء رسالة الخطأ
@@ -461,10 +467,12 @@
                 return;
             }
             
-            console.log('بدء عملية حذف الحساب...');
-            console.log('بيانات المستخدم:', {
+            console.log('🚀 بدء عملية حذف الحساب...');
+            console.log('📊 بيانات المستخدم:', {
                 email: currentUser.email,
-                id: currentUser.id
+                id: currentUser.id,
+                hasCredential: !!currentUser.credential,
+                hasAccessToken: !!accessToken
             });
             
             // إظهار شاشة التحميل
@@ -472,16 +480,22 @@
             
             try {
                 // حذف بيانات المستخدم من الخادم الخاص بك
-                console.log('حذف البيانات من الخادم...');
-                await deleteUserDataFromServer();
+                console.log('🗄️ بدء حذف البيانات من الخادم...');
+                const result = await deleteUserDataFromServer();
                 
                 // إظهار رسالة النجح
-                console.log('تم الحذف بنجاح');
+                console.log('✅ تم الحذف بنجاح:', result);
                 showSuccess();
                 
             } catch (error) {
-                console.error('خطأ في حذف الحساب:', error);
-                showError('حدث خطأ أثناء حذف الحساب: ' + error.message);
+                console.error('❌ خطأ في حذف الحساب:', error);
+                console.error('📝 تفاصيل الخطأ:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                
+                showError(`حدث خطأ أثناء حذف الحساب: ${error.message}`);
                 showLoading(false);
             }
         }
@@ -491,7 +505,17 @@
             // استخدام JWT credential إذا كان متاحاً، وإلا استخدام access token
             const tokenToSend = currentUser.credential || accessToken || 'no-token';
             
-            console.log('إرسال طلب حذف إلى API...');
+            console.log('🔐 نوع التوكن المُرسل:', currentUser.credential ? 'JWT Credential' : 'Access Token');
+            console.log('📤 إرسال طلب حذف إلى API...');
+            
+            const requestBody = {
+                email: currentUser.email,
+                googleId: currentUser.id,
+                name: currentUser.name,
+                action: 'delete_account'
+            };
+            
+            console.log('📋 بيانات الطلب:', requestBody);
             
             const response = await fetch('/api/delete-account', {
                 method: 'POST',
@@ -499,32 +523,37 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${tokenToSend}`
                 },
-                body: JSON.stringify({
-                    email: currentUser.email,
-                    googleId: currentUser.id,
-                    name: currentUser.name,
-                    action: 'delete_account'
-                })
+                body: JSON.stringify(requestBody)
             });
             
-            console.log('استجابة الخادم:', response.status);
+            console.log('📡 استجابة الخادم:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                url: response.url
+            });
+            
+            // قراءة نص الاستجابة أولاً
+            const responseText = await response.text();
+            console.log('📄 نص الاستجابة الخام:', responseText);
+            
+            // محاولة تحويل النص إلى JSON
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+                console.log('📊 بيانات الاستجابة المحولة:', responseData);
+            } catch (parseError) {
+                console.error('❌ فشل تحويل الاستجابة إلى JSON:', parseError);
+                throw new Error(`استجابة غير صالحة من الخادم: ${responseText.substring(0, 100)}...`);
+            }
             
             if (!response.ok) {
-                let errorMessage = 'فشل حذف البيانات من الخادم';
-                try {
-                    const errorData = await response.json();
-                    console.error('خطأ من الخادم:', errorData);
-                    errorMessage = errorData.message || errorData.error || errorMessage;
-                } catch (e) {
-                    console.error('فشل في قراءة رسالة الخطأ:', e);
-                    errorMessage = `HTTP Error: ${response.status}`;
-                }
+                console.error('❌ خطأ من الخادم:', responseData);
+                const errorMessage = responseData.message || responseData.error || `HTTP Error: ${response.status}`;
                 throw new Error(errorMessage);
             }
             
-            const result = await response.json();
-            console.log('نتيجة حذف الحساب:', result);
-            return result;
+            return responseData;
         }
         
         // إلغاء عملية الحذف
@@ -570,7 +599,7 @@
             console.log('تحميل الصفحة...');
             
             // التحقق من Client ID
-            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+            if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === '439745879260-1q0q8k7hopmcinpihamkr9g8amunbsja.apps.googleusercontent.com') {
                 console.error('Google Client ID غير محدد!');
                 document.querySelector('.container').innerHTML = `
                     <div class="icon" style="background: #e74c3c;">⚠️</div>
