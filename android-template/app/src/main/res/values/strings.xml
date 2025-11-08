@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Monetization Template</string>
+    <string name="ads_enabled">Ads are currently enabled</string>
+    <string name="ads_disabled">Ads have been removed. Thank you!</string>
+    <string name="restoring_purchases">Restoring purchases…</string>
+    <string name="exit_message">Do you want to exit the application?</string>
+    <string name="exit_cancel">Stay</string>
+    <string name="exit_confirm">Exit</string>
+</resources>
