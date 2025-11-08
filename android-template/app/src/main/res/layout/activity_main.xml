@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monetization Template"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ads are currently enabled"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/button_remove_ads"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Remove Ads for $1"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/button_restore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Restore Purchase"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/button_show_interstitial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Show Interstitial"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/admob_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
+
+    <FrameLayout
+        android:id="@+id/fan_banner_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>
