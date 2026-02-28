@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Battery Insight Pro</string>
+    <string name="live_notification_title">Live battery monitor active</string>
+    <string name="live_notification_text">Battery sampling is running for notification/overlay.</string>
+</resources>

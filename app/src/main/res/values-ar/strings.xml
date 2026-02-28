@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Battery Insight Pro</string>
+    <string name="live_notification_title">مراقبة البطارية المباشرة مفعلة</string>
+    <string name="live_notification_text">يعمل أخذ العينات للبطارية للإشعار أو الطبقة العائمة.</string>
+</resources>

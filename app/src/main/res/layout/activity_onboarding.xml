@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Battery Insight Pro uses Usage Access and optional Overlay to improve estimates."
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/usage_access_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enable Usage Access" />
+
+        <Button
+            android:id="@+id/overlay_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enable Overlay (Optional)" />
+
+        <Button
+            android:id="@+id/optimization_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Battery Optimization Guide" />
+
+        <Button
+            android:id="@+id/done_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Done" />
+    </LinearLayout>
+</ScrollView>
