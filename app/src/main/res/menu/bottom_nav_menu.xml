@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_dashboard" android:title="Dashboard" android:icon="@drawable/ic_battery"/>
+    <item android:id="@+id/nav_health" android:title="Health" android:icon="@drawable/ic_battery"/>
+    <item android:id="@+id/nav_usage" android:title="Usage" android:icon="@drawable/ic_battery"/>
+    <item android:id="@+id/nav_charge_speed" android:title="Charge" android:icon="@drawable/ic_battery"/>
+    <item android:id="@+id/nav_history" android:title="History" android:icon="@drawable/ic_battery"/>
+    <item android:id="@+id/nav_settings" android:title="Settings" android:icon="@drawable/ic_battery"/>
+</menu>

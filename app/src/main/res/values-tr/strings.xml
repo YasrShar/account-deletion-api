@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Battery Insight Pro</string>
+    <string name="live_notification_title">Canlı pil izleme etkin</string>
+    <string name="live_notification_text">Bildirim/katman için pil örnekleme çalışıyor.</string>
+</resources>

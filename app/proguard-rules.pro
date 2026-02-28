@@ -1,0 +1,2 @@
+-keep class androidx.lifecycle.DefaultLifecycleObserver
+-dontwarn org.jetbrains.annotations.**
